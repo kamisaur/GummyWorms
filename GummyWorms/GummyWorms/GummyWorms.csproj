@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+
+    <Version>0.0.1</Version>
+<!--    <Authors>Kamil Kurbonov</Authors>-->
+    <Product>Gummy Worms</Product>
+    <Description>Draw fancy progress bars in Xamarin.Forms application. Powered by SkiaSharp.</Description>
+<!--    <PackageLicenseFile>LICENSE</PackageLicenseFile>-->
+<!--    <PackageProjectUrl>https://github.com/mgierlasinski/MagicGradients/</PackageProjectUrl>-->
+    <PackageTags>progressbar;gradients;linear;radial;skiasharp;xamarin;forms;android;ios;</PackageTags>
+<!--    <PackageIcon>icon.png</PackageIcon>-->
+  </PropertyGroup>
+    
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DefineConstants>TRACE;DEBUG;DEBUG_RENDER</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SkiaSharp.Views.Forms" Version="1.68.1.1" />
+    <PackageReference Include="Xamarin.Forms" Version="4.4.0.991265" />
+  </ItemGroup>
+    
+</Project>

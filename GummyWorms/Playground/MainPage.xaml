@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:d="http://xamarin.com/schemas/2014/forms/design"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:gummy="clr-namespace:GummyWorms;assembly=GummyWorms"
+             mc:Ignorable="d" x:Class="Playground.MainPage">
+
+    <StackLayout VerticalOptions="Center">
+        
+        <gummy:ProgressBar
+            Margin="20"
+            HeightRequest="30"
+            Percentage="0.6"
+            CornerRadius="20"
+            BarBackgroundColor="LightGray"
+            GradientStartColor="Violet"
+            HasText="True"
+            TextColor="White"
+            GradientEndColor="Tomato" />
+
+        <gummy:RadialProgressBar
+            HorizontalOptions="Center"
+            HeightRequest="200"
+            WidthRequest="200"
+            ProgressBackgroundColor="LightGray"
+            ProgressColor="Purple"
+            ProgressThickness="30"
+            
+            Progress=".7"/>
+
+    </StackLayout>
+</ContentPage>
