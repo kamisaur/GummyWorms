@@ -5,17 +5,18 @@
              xmlns:gummy="clr-namespace:GummyWorms;assembly=GummyWorms"
              mc:Ignorable="d" x:Class="Playground.MainPage">
 
-    <StackLayout VerticalOptions="Center">
+    <StackLayout VerticalOptions="Center" Spacing="40">
         
         <gummy:ProgressBar
-            Margin="20"
+            Margin="30"
             HeightRequest="30"
-            Percentage="0.6"
-            CornerRadius="20"
+            Progress="0.3"
+            CornerRadius="15"
             BarBackgroundColor="LightGray"
             GradientStartColor="Violet"
             HasText="True"
             TextColor="White"
+            AlternativeTextColor="DarkSlateGray"
             GradientEndColor="Tomato" />
 
         <gummy:RadialProgressBar

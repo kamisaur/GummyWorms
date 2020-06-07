@@ -8,19 +8,20 @@ namespace GummyWorms
 {
     public class ProgressBar : SKCanvasView
     {
-        public static BindableProperty PercentageProperty = BindableProperty.Create(nameof(Percentage), typeof(float),
+        public static BindableProperty ProgressProperty = BindableProperty.Create(nameof(Progress), typeof(float),
             typeof(ProgressBar), 0f, BindingMode.OneWay,
             validateValue: (_, value) => value != null,
             propertyChanged: OnPropertyChangedInvalidate);
 
-        public float Percentage
+        public float Progress
         {
-            get => (float)GetValue(PercentageProperty);
-            set => SetValue(PercentageProperty, value);
+            get => (float)GetValue(ProgressProperty);
+            set => SetValue(ProgressProperty, value);
         }
 
-        public static BindableProperty CornerRadiusProperty = BindableProperty.Create(nameof(Percentage), typeof(float),
-            typeof(ProgressBar), 5f, BindingMode.OneWay,
+
+        public static BindableProperty CornerRadiusProperty = BindableProperty.Create(nameof(CornerRadius), typeof(float),
+            typeof(ProgressBar), 0f, BindingMode.OneWay,
             validateValue: (_, value) => value != null && (float)value >= 0,
             propertyChanged: OnPropertyChangedInvalidate);
 
@@ -103,7 +104,6 @@ namespace GummyWorms
 
 
 
-
         private static void OnPropertyChangedInvalidate(BindableObject bindable, object oldvalue, object newvalue)
         {
             var control = (ProgressBar)bindable;
@@ -112,73 +112,124 @@ namespace GummyWorms
                 control.InvalidateSurface();
         }
 
+
         protected override void OnPaintSurface(SKPaintSurfaceEventArgs e)
         {
-            var info = e.Info;
             var canvas = e.Surface.Canvas;
 
-            float width = (float)Width;
-            var scale = CanvasSize.Width / width;
-
-            var percentage = Percentage;
-
+            // Skia gets pixel count when xf adjusts width value to screen density
+            var scale = CanvasSize.Width / (float)Width;
             var cornerRadius = CornerRadius * scale;
 
-            var textSize = FontSize * scale;
-
-            var height = e.Info.Height;
-
-            var str = percentage.ToString("0%");
-
-            var percentageWidth = (int)Math.Floor(info.Width * percentage);
+            var percentageWidth = (int)Math.Floor(CanvasSize.Width * Progress);
 
             canvas.Clear();
 
-            var backgroundBar = new SKRoundRect(new SKRect(0, 0, info.Width, height), cornerRadius, cornerRadius);
-            var progressBar = new SKRoundRect(new SKRect(0, 0, percentageWidth, height), cornerRadius, cornerRadius);
 
-            var background = new SKPaint { Color = BarBackgroundColor.ToSKColor(), IsAntialias = true };
-            canvas.DrawRoundRect(backgroundBar, background);
-
-            using (var paint = new SKPaint() { IsAntialias = true })
-            {
-                float x = percentageWidth;
-                float y = info.Height;
-                var rect = new SKRect(0, 0, x, y);
-
-                paint.Shader = SKShader.CreateLinearGradient(
-                    new SKPoint(rect.Left, rect.Top),
-                    new SKPoint(rect.Right, rect.Top),
-                    new[]
-                    {
-                        GradientStartColor.ToSKColor(),
-                        GradientEndColor.ToSKColor()
-                    },
-                    new float[] { 0, 1 },
-                    SKShaderTileMode.Clamp);
-
-                canvas.DrawRoundRect(progressBar, paint);
-            }
+            DrawProgressBackground(canvas, cornerRadius);
+            DrawProgressBar(canvas, cornerRadius, percentageWidth);
 
             if (HasText)
             {
-                var textPaint = new SKPaint { Color = TextColor.ToSKColor(), TextSize = textSize };
-
-                var textBounds = new SKRect();
-
-                textPaint.MeasureText(str, ref textBounds);
-
-                var xText = percentageWidth / 2 - textBounds.MidX;
-                if (xText < 0)
-                {
-                    xText = info.Width / 2 - textBounds.MidX;
-                    textPaint.Color = AlternativeTextColor.ToSKColor();
-                }
-
-                var yText = info.Height / 2 - textBounds.MidY;
-
-                canvas.DrawText(str, xText, yText, textPaint);
+                DrawProgressText(canvas, percentageWidth, scale);
             }
+        }
+
+
+        private void DrawProgressBackground(SKCanvas canvas, float cornerRadius)
+        {
+            var backgroundBar = new SKRoundRect(
+                //new SKRect(10, 10, CanvasSize.Width - 10, CanvasSize.Height - 10)
+                new SKRect(0, 0, CanvasSize.Width, CanvasSize.Height)
+                , cornerRadius
+                , cornerRadius);
+
+
+            using (SKPaint background = new SKPaint())
+            {
+                background.Color = BarBackgroundColor.ToSKColor();
+                background.IsAntialias = true;
+
+                canvas.DrawRoundRect(backgroundBar, background);
+            }
+
+            //background.ImageFilter = SKImageFilter.CreateDropShadow(
+            //        0,
+            //        0,
+            //        10,
+            //        10,
+            //        SKColors.Red,
+            //        SKDropShadowImageFilterShadowMode.DrawShadowAndForeground);
+
+
+
+            //var RectangleStyleFillShadow = SKImageFilter.CreateDropShadow(0f, 0f, 20f, 20f, Color.Black.ToSKColor(), SKDropShadowImageFilterShadowMode.DrawShadowAndForeground, null, null);
+
+            //var RectangleStyleFillPaint = new SKPaint()
+            //{
+            //    Style = SKPaintStyle.Fill,
+            //    Color = Color.White.ToSKColor(),
+            //    BlendMode = SKBlendMode.SrcOver,
+            //    IsAntialias = true,
+            //    ImageFilter = RectangleStyleFillShadow
+            //};
+
+            //canvas.DrawRect(new SKRect(20f, 20f, CanvasSize.Width - 20, CanvasSize.Height - 20), RectangleStyleFillPaint);
+
+
+        }
+
+
+        private void DrawProgressBar(SKCanvas canvas, float cornerRadius, float width)
+        {
+            var progressBar = new SKRoundRect(
+                new SKRect(0, 0, width, CanvasSize.Height)
+                , cornerRadius
+                , cornerRadius);
+
+            using (var paint = new SKPaint() { IsAntialias = true })
+            {
+                var rect = new SKRect(0, 0, width, CanvasSize.Height);
+
+                paint.Shader = SKShader.CreateLinearGradient(
+                    start: new SKPoint(rect.Left, rect.Top),
+                    end: new SKPoint(rect.Right, rect.Top),
+                    colors: new[]
+                        {
+                            GradientStartColor.ToSKColor(),
+                            GradientEndColor.ToSKColor()
+                        },
+                    colorPos: new float[] { 0, 1 },
+                    mode: SKShaderTileMode.Clamp);
+
+                canvas.DrawRoundRect(progressBar, paint);
+            }
+        }
+
+
+        private void DrawProgressText(SKCanvas canvas, float width, float scale)
+        {
+            var str = Progress.ToString("0%");
+
+            var textPaint = new SKPaint
+            {
+                Color = TextColor.ToSKColor(),
+                TextSize = FontSize * scale
+            };
+
+            var textBounds = new SKRect();
+            textPaint.MeasureText(str, ref textBounds);
+
+            var xText = width / 2 - textBounds.MidX;
+            if (xText < 0)
+            {
+                xText = CanvasSize.Width / 2 - textBounds.MidX;
+                textPaint.Color = AlternativeTextColor.ToSKColor();
+            }
+
+            var yText = CanvasSize.Height / 2 - textBounds.MidY;
+
+            canvas.DrawText(str, xText, yText, textPaint);
         }
     }
 }
