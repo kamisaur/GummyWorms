@@ -25,7 +25,8 @@ jobs:
       with:
         name: GummyWorms
         path: ./GummyWorms/bin/Release/GummyWorms.${{ github.event.release.tag_name }}.nupkg
-
+    - name: Publish Nuget Package
+      run: dotnet nuget push **/*.nupkg --api-key ${{ secrets.GUMMY_WORMS_NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --no-symbols true
 #     - name: Install dependencies
 #       run: dotnet restore
 #     - name: Build
