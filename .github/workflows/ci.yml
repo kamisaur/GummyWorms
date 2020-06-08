@@ -23,7 +23,7 @@ jobs:
       run: dotnet restore
     - name: Build
       run: dotnet build --configuration Release --no-restore
-      working-directory: .\GummyWorms
+      working-directory: ./GummyWorms
 #     - name: Test
 #       run: dotnet test --no-restore --verbosity normal
-#       working-directory: .\GummyWorms
+#       working-directory: ./GummyWorms
