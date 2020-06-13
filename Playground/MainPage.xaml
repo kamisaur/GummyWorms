@@ -9,10 +9,10 @@
         
         <gummy:ProgressBar
             Margin="30"
-            HeightRequest="30"
+            HeightRequest="50"
             Progress="0.3"
             CornerRadius="15"
-            BarBackgroundColor="LightGray"
+            BackgroundBarColor="LightGray"
             GradientStartColor="Violet"
             HasText="True"
             TextColor="White"
