@@ -126,19 +126,51 @@ namespace GummyWorms
 
             canvas.Clear();
 
+            var backgroundColors = new SKColor[] { SKColors.Tomato, SKColors.Black, SKColors.White };
+            var backgroundColorOffsets = new float[] { 0, 0.5f, 1 };
+
+            // Outter shadow
+            float shadowOffsetX = 0f;
+            float shadowOffsetY = 0f;
+            float shadowBlurX = 20f;
+            float shadowBlurY = 20f;
+            var shadowColor = SKColors.Gray;
+
+            // Border
+            float borderThickness = 15;
+            var borderColors = new SKColor[] { SKColors.Red, SKColors.Blue, SKColors.Orange };
+            var borderColorOffsets = new float[] { 0, 0.5f, 1 };
+
+            // Inner Shadow
+            float innerBlurShadowThickness = 20;
+            float innerBlurShadowOffsetX = 0;
+            float innerBlurShadowOffsetY = 0;
+            float innerBlurShadowBlurX = 12;
+            float innerBlurShadowBlurY = 12;
+            SKColor innerBlurShadowColor = SKColors.Orange;
+
 
             DrawRectangle(
                 canvas
                 , CanvasSize.Width
                 , CanvasSize.Height
                 , cornerRadius
-                , BackgroundBarColor.ToSKColor()
-                , 2
-                , SKColors.Black
-                , 0
-                , 0
-                , 10
-                , 10);
+                , backgroundColors
+                , backgroundColorOffsets
+                , borderThickness
+                , borderColors
+                , borderColorOffsets
+                , shadowOffsetX
+                , shadowOffsetY
+                , shadowBlurX
+                , shadowBlurY
+                , shadowColor
+                , innerBlurShadowThickness
+                , innerBlurShadowOffsetX
+                , innerBlurShadowOffsetY
+                , innerBlurShadowBlurX
+                , innerBlurShadowBlurY
+                , innerBlurShadowColor);
 
             DrawProgressBar(canvas, cornerRadius, percentageWidth);
 
@@ -148,7 +180,6 @@ namespace GummyWorms
             }
         }
 
-
         /// <summary>
         /// Draw rectangle with shadows and border
         /// </summary>
@@ -157,13 +188,22 @@ namespace GummyWorms
             , float width
             , float height
             , float cornerRadius
-            , SKColor backgroundColor
+            , SKColor[] backgroundColors
+            , float[] backgroundColorOffsets
             , float borderThickness
-            , SKColor borderColor
+            , SKColor[] borderColors
+            , float[] borderColorOffsets
             , float shadowOffsetX
             , float shadowOffsetY
             , float shadowBlurX
             , float shadowBlurY
+            , SKColor shadowColor
+            , float innerBlurShadowThickness
+            , float innerBlurShadowOffsetX
+            , float innerBlurShadowOffsetY
+            , float innerBlurShadowBlurX
+            , float innerBlurShadowBlurY
+            , SKColor innerBlurShadowColor
             )
         {
             // give some padding for shadow so it's not cut out by boundaries
@@ -179,22 +219,31 @@ namespace GummyWorms
             // paddings are added based on shadow blur, so the shadow wouldn't get out of the boudnaries
             var rect = new SKRect
             {
-                Left = shadowOffsetX > 0
-                ? initialPadding
+                Left = shadowOffsetX >= 0
+                ? initialPadding + shadowBlurX
                 : Math.Abs(shadowOffsetX) + shadowBlurX + additonalPadding,
 
-                Right = shadowOffsetX < 0
-                ? width - initialPadding
+                Right = shadowOffsetX <= 0
+                ? width - initialPadding - shadowBlurX
                 : width - shadowOffsetX - shadowBlurX - additonalPadding,
 
-                Top = shadowOffsetY > 0
-                ? initialPadding + borderPadding
+                Top = shadowOffsetY >= 0
+                ? initialPadding + shadowBlurY
                 : Math.Abs(shadowOffsetY) + shadowBlurY + additonalPadding,
 
-                Bottom = shadowOffsetY < 0
-                ? height - initialPadding
+                Bottom = shadowOffsetY <= 0
+                ? height - initialPadding - shadowBlurY
                 : height - shadowOffsetY - shadowBlurY - additonalPadding
             };
+
+            var borderRect = new SKRect();
+            borderRect.Left = rect.Left + borderPadding - initialPadding;
+            borderRect.Right = rect.Right - borderPadding + initialPadding;
+            borderRect.Top = rect.Top + borderPadding - initialPadding;
+            borderRect.Bottom = rect.Bottom - borderPadding + initialPadding;
+
+
+
 
             var backgroundBar = new SKRoundRect(
                 rect
@@ -203,44 +252,98 @@ namespace GummyWorms
 
             using (SKPaint paint = new SKPaint())
             {
-                paint.Color = backgroundColor;
                 paint.IsAntialias = true;
+
+                paint.Shader = SKShader.CreateLinearGradient(
+                    new SKPoint(rect.Left, rect.Top),
+                    new SKPoint(rect.Right, rect.Bottom),
+                    backgroundColors,
+                    backgroundColorOffsets,
+                    SKShaderTileMode.Clamp);
 
                 // paint background
                 canvas.DrawRoundRect(backgroundBar, paint);
 
+
                 // shadow
-                paint.ImageFilter = SKImageFilter.CreateDropShadow(
-                    shadowOffsetX,
-                    shadowOffsetY,
-                    shadowBlurX,
-                    shadowBlurY,
-                    SKColors.Green,
-                    SKDropShadowImageFilterShadowMode.DrawShadowAndForeground);
-                canvas.DrawRoundRect(backgroundBar, paint);
+                if (shadowBlurX > 0 && shadowBlurY > 0)
+                {
+                    paint.ImageFilter = SKImageFilter.CreateDropShadow(
+                        shadowOffsetX,
+                        shadowOffsetY,
+                        shadowBlurX,
+                        shadowBlurY,
+                        shadowColor,
+                        SKDropShadowImageFilterShadowMode.DrawShadowAndForeground);
+                    canvas.DrawRoundRect(backgroundBar, paint);
+                }
 
 
+
+                // inner shadow
+                if (innerBlurShadowThickness > 0)
+                {
+                    canvas.ClipRoundRect(backgroundBar, SKClipOperation.Intersect, true);
+
+                    var innerShadowRect = new SKRect();
+
+                    innerShadowRect.Left = innerBlurShadowOffsetX <= 0
+                        ? borderRect.Left + innerBlurShadowOffsetX + borderPadding
+                        : borderRect.Left + borderPadding - 0;
+
+                    innerShadowRect.Right = innerBlurShadowOffsetX >= 0
+                        ? borderRect.Right + innerBlurShadowOffsetX - borderPadding
+                        : borderRect.Right - borderPadding;
+
+                    innerShadowRect.Top = innerBlurShadowOffsetY <= 0
+                        ? borderRect.Top + innerBlurShadowOffsetY + borderPadding
+                        : borderRect.Top + borderPadding;
+
+                    innerShadowRect.Bottom = innerBlurShadowOffsetY >= 0
+                        ? borderRect.Bottom + innerBlurShadowOffsetY - borderPadding
+                        : borderRect.Bottom - borderPadding;
+
+
+                    var innerShadowBorder = new SKRoundRect(
+                        innerShadowRect
+                        , cornerRadius - borderThickness
+                        , cornerRadius - borderThickness);
+
+                    SKPaint paint1 = new SKPaint();
+                    paint1.Color = innerBlurShadowColor;
+                    paint1.Style = SKPaintStyle.Stroke;
+                    paint1.StrokeWidth = innerBlurShadowThickness;
+
+                    paint1.ImageFilter = SKImageFilter.CreateBlur(innerBlurShadowBlurX, innerBlurShadowBlurY);
+                    canvas.DrawRoundRect(innerShadowBorder, paint1);
+                }
 
                 // border
-                var borderRect = new SKRect();
-                borderRect.Left = rect.Left + borderPadding;
-                borderRect.Right = rect.Right - borderPadding;
-                borderRect.Top = rect.Top + borderPadding;
-                borderRect.Bottom = rect.Bottom - borderPadding;
+                if (borderThickness > 0)
+                {
+                    var border = new SKRoundRect(
+                        borderRect
+                        , cornerRadius - borderPadding
+                        , cornerRadius - borderPadding);
 
-                var border = new SKRoundRect(
-                    borderRect
-                    , cornerRadius - borderPadding
-                    , cornerRadius - borderPadding);
+                    paint.Style = SKPaintStyle.Stroke;
+                    paint.StrokeWidth = borderThickness;
+                    paint.ImageFilter = null;
 
-                paint.Style = SKPaintStyle.Stroke;
-                paint.Color = borderColor;
-                paint.StrokeWidth = borderThickness;
-                paint.ImageFilter = null;
-                canvas.DrawRoundRect(border, paint);
+
+                    paint.Shader = SKShader.CreateLinearGradient(
+                        new SKPoint(rect.Left, rect.Top),
+                        new SKPoint(rect.Right, rect.Bottom),
+                        borderColors,
+                        borderColorOffsets,
+                        SKShaderTileMode.Clamp);
+
+                    canvas.DrawRoundRect(border, paint);
+                }
+
+
             }
         }
-
 
         private void DrawProgressBar(SKCanvas canvas, float cornerRadius, float width)
         {
