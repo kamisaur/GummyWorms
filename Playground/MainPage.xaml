@@ -6,28 +6,54 @@
              mc:Ignorable="d" x:Class="Playground.MainPage">
 
     <StackLayout VerticalOptions="Center" Spacing="40">
-        
-        <gummy:ProgressBar
-            Margin="30"
-            HeightRequest="50"
-            Progress="0.3"
-            CornerRadius="15"
-            BackgroundBarColor="LightGray"
-            GradientStartColor="Violet"
-            HasText="True"
-            TextColor="White"
-            AlternativeTextColor="DarkSlateGray"
-            GradientEndColor="Tomato" />
 
+        
         <gummy:RadialProgressBar
             HorizontalOptions="Center"
             HeightRequest="200"
             WidthRequest="200"
             ProgressBackgroundColor="LightGray"
-            ProgressColor="Purple"
+            ProgressColor="Tomato"
+            TranslationY="200"
             ProgressThickness="30"
-            
-            Progress=".7"/>
+            Progress="0.1"/>
+
+        <gummy:ProgressBar
+            Margin="30"
+            HeightRequest="80"
+            Progress="0.4"
+            CornerRadius="15"
+            BackgroundBarColor="Green"
+            GradientStartColor="Tomato"
+            HasText="True"
+            TextColor="White"
+            AlternativeTextColor="DarkSlateGray"
+            GradientEndColor="Violet">
+
+            <gummy:ProgressBar.InnerShadow>
+                <gummy:Shadow Thickness="12"
+                              Color="Red"
+                              BlurX="9"
+                              BlurY="9"/>
+            </gummy:ProgressBar.InnerShadow>
+
+            <gummy:ProgressBar.ProgressInnerShadow>
+                <gummy:Shadow Thickness="2"
+                              Color="DarkRed"
+                              BlurX="2"
+                              BlurY="2"/>
+            </gummy:ProgressBar.ProgressInnerShadow>
+
+            <gummy:ProgressBar.Shadow>
+                <gummy:Shadow Thickness="12"
+                              Color="Black"
+                              BlurX="12"
+                              BlurY="12"/>
+            </gummy:ProgressBar.Shadow>
+
+        </gummy:ProgressBar>
+
+
 
     </StackLayout>
 </ContentPage>

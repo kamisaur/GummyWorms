@@ -103,6 +103,54 @@ namespace GummyWorms
         }
 
 
+        public static BindableProperty InnerShadowProperty = BindableProperty.Create(
+            propertyName: nameof(InnerShadow)
+            , returnType: typeof(Shadow)
+            , declaringType: typeof(ProgressBar)
+            , defaultValue: new Shadow()
+            , defaultBindingMode: BindingMode.OneWay
+            , validateValue: (_, value) => value != null
+            , propertyChanged: OnPropertyChangedInvalidate);
+
+        public Shadow InnerShadow
+        {
+            get => (Shadow)GetValue(InnerShadowProperty);
+            set => SetValue(InnerShadowProperty, value);
+        }
+
+
+        public static BindableProperty ProgressInnerShadowProperty = BindableProperty.Create(
+            propertyName: nameof(ProgressInnerShadow)
+            , returnType: typeof(Shadow)
+            , declaringType: typeof(ProgressBar)
+            , defaultValue: new Shadow()
+            , defaultBindingMode: BindingMode.OneWay
+            , validateValue: (_, value) => value != null
+            , propertyChanged: OnPropertyChangedInvalidate);
+
+        public Shadow ProgressInnerShadow
+        {
+            get => (Shadow)GetValue(ProgressInnerShadowProperty);
+            set => SetValue(ProgressInnerShadowProperty, value);
+        }
+
+
+        public static BindableProperty ShadowProperty = BindableProperty.Create(
+            propertyName: nameof(Shadow)
+            , returnType: typeof(Shadow)
+            , declaringType: typeof(ProgressBar)
+            , defaultValue: new Shadow()
+            , defaultBindingMode: BindingMode.OneWay
+            , validateValue: (_, value) => value != null
+            , propertyChanged: OnPropertyChangedInvalidate);
+
+        public Shadow Shadow
+        {
+            get => (Shadow)GetValue(ShadowProperty);
+            set => SetValue(ShadowProperty, value);
+        }
+
+
 
         private static void OnPropertyChangedInvalidate(BindableObject bindable, object oldvalue, object newvalue)
         {
@@ -119,41 +167,44 @@ namespace GummyWorms
 
             // Skia gets pixel count when xf adjusts width value to screen density
             var scale = CanvasSize.Width / (float)Width;
-            var cornerRadius = CornerRadius * scale;
 
-            var percentageWidth = (int)Math.Floor(CanvasSize.Width * Progress);
-            var fontSize = FontSize * scale;
 
             canvas.Clear();
 
-            var backgroundColors = new SKColor[] { SKColors.Tomato, SKColors.Black, SKColors.White };
+            var cornerRadius = CornerRadius * scale;
+            var backgroundColors = new SKColor[] { SKColors.LightGray, SKColors.LightGray, SKColors.LightGray };
             var backgroundColorOffsets = new float[] { 0, 0.5f, 1 };
 
-            // Outter shadow
-            float shadowOffsetX = 0f;
-            float shadowOffsetY = 0f;
-            float shadowBlurX = 20f;
-            float shadowBlurY = 20f;
-            var shadowColor = SKColors.Gray;
 
             // Border
-            float borderThickness = 15;
-            var borderColors = new SKColor[] { SKColors.Red, SKColors.Blue, SKColors.Orange };
+            float borderThickness = 0;
+            var borderColors = new SKColor[] { SKColors.Blue, SKColors.Blue, SKColors.Blue };
             var borderColorOffsets = new float[] { 0, 0.5f, 1 };
 
+
+            // Outter shadow
+            float shadowThickness = Shadow.Thickness * scale;
+            float shadowOffsetX = Shadow.OffsetX * scale;
+            float shadowOffsetY = Shadow.OffsetY * scale;
+            float shadowBlurX   = Shadow.BlurX * scale;
+            float shadowBlurY   = Shadow.BlurY * scale;
+            var shadowColor = Shadow.Color.ToSKColor();
+
             // Inner Shadow
-            float innerBlurShadowThickness = 20;
-            float innerBlurShadowOffsetX = 0;
-            float innerBlurShadowOffsetY = 0;
-            float innerBlurShadowBlurX = 12;
-            float innerBlurShadowBlurY = 12;
-            SKColor innerBlurShadowColor = SKColors.Orange;
+            float innerBlurShadowThickness  = InnerShadow.Thickness * scale;
+            float innerBlurShadowOffsetX    = InnerShadow.OffsetX * scale;
+            float innerBlurShadowOffsetY    = InnerShadow.OffsetY * scale;
+            float innerBlurShadowBlurX      = InnerShadow.BlurX * scale;
+            float innerBlurShadowBlurY      = InnerShadow.BlurY * scale;
+            SKColor innerBlurShadowColor    = InnerShadow.Color.ToSKColor();
 
 
-            DrawRectangle(
+            var rect = DrawRectangle(
                 canvas
                 , CanvasSize.Width
                 , CanvasSize.Height
+                , 0
+                , 0
                 , cornerRadius
                 , backgroundColors
                 , backgroundColorOffsets
@@ -172,45 +223,103 @@ namespace GummyWorms
                 , innerBlurShadowBlurY
                 , innerBlurShadowColor);
 
-            DrawProgressBar(canvas, cornerRadius, percentageWidth);
 
-            if (HasText)
-            {
-                DrawProgressText(canvas, percentageWidth, fontSize);
-            }
+            //rect.Left
+            var pr = Progress;
+            var percentageWidth = rect.Width * Progress;
+
+            var cornerRadiusProgress = cornerRadius;
+            var backgroundColorsProgress = new SKColor[] { SKColors.Orange, SKColors.Violet };
+            var backgroundColorOffsetsProgress = new float[] { 0, 1f };
+
+
+            // Border
+            float borderThicknessProgress = 0;
+            var borderColorsProgress = new SKColor[] { SKColors.Blue, SKColors.Blue, SKColors.Blue };
+            var borderColorOffsetsProgress = new float[] { 0, 0.5f, 1 };
+
+            // Inner Shadow
+            float innerBlurShadowThicknessProgress = ProgressInnerShadow.Thickness * scale;
+            float innerBlurShadowOffsetXProgress = ProgressInnerShadow.OffsetX * scale;
+            float innerBlurShadowOffsetYProgress = ProgressInnerShadow.OffsetY * scale;
+            float innerBlurShadowBlurXProgress = ProgressInnerShadow.BlurX * scale;
+            float innerBlurShadowBlurYProgress = ProgressInnerShadow.BlurY * scale;
+            SKColor innerBlurShadowColorProgress = ProgressInnerShadow.Color.ToSKColor();
+
+
+            DrawRectangle(
+                canvas
+                , percentageWidth
+                , rect.Height
+                , rect.Left
+                , rect.Top
+                , cornerRadiusProgress
+                , backgroundColorsProgress
+                , backgroundColorOffsetsProgress
+                , borderThicknessProgress
+                , borderColorsProgress
+                , borderColorOffsetsProgress
+                , 0
+                , 0
+                , 0
+                , 0
+                , 0
+                , innerBlurShadowThicknessProgress
+                , innerBlurShadowOffsetXProgress
+                , innerBlurShadowOffsetYProgress
+                , innerBlurShadowBlurXProgress
+                , innerBlurShadowBlurYProgress
+                , innerBlurShadowColorProgress);
+
+
+            //DrawProgressBar(canvas, cornerRadius, percentageWidth);
+
+
+            //var fontSize = FontSize * scale;
+            //if (HasText)
+            //{
+            //    DrawProgressText(canvas, percentageWidth, fontSize);
+            //}
         }
 
         /// <summary>
         /// Draw rectangle with shadows and border
         /// </summary>
-        private void DrawRectangle(
+        private SKRect DrawRectangle(
             SKCanvas canvas
             , float width
             , float height
+            , float offsetX 
+            , float offsetY 
             , float cornerRadius
             , SKColor[] backgroundColors
             , float[] backgroundColorOffsets
             , float borderThickness
             , SKColor[] borderColors
             , float[] borderColorOffsets
+
             , float shadowOffsetX
             , float shadowOffsetY
             , float shadowBlurX
             , float shadowBlurY
             , SKColor shadowColor
+
             , float innerBlurShadowThickness
             , float innerBlurShadowOffsetX
             , float innerBlurShadowOffsetY
             , float innerBlurShadowBlurX
             , float innerBlurShadowBlurY
             , SKColor innerBlurShadowColor
+
             )
         {
             // give some padding for shadow so it's not cut out by boundaries
-            var additonalPadding = 4;
+            // todo improve logic for x and y
+            var additonalPadding = shadowBlurX + shadowBlurX;
 
             // so that the rect is not kissing the border
-            var initialPadding = 1;
+            // todo improve logic for x and y
+            var initialPadding = shadowBlurX;
 
             // border is drawn in rect in the way that half of the border is out of rect and half is in
             var borderPadding = borderThickness / 2;
@@ -220,130 +329,134 @@ namespace GummyWorms
             var rect = new SKRect
             {
                 Left = shadowOffsetX >= 0
-                ? initialPadding + shadowBlurX
-                : Math.Abs(shadowOffsetX) + shadowBlurX + additonalPadding,
+                    ? initialPadding + shadowBlurX + offsetX
+                    : Math.Abs(shadowOffsetX) + shadowBlurX + additonalPadding + offsetX,
 
                 Right = shadowOffsetX <= 0
-                ? width - initialPadding - shadowBlurX
-                : width - shadowOffsetX - shadowBlurX - additonalPadding,
+                    ? width - initialPadding - shadowBlurX
+                    : width - shadowOffsetX - shadowBlurX - additonalPadding,
 
                 Top = shadowOffsetY >= 0
-                ? initialPadding + shadowBlurY
-                : Math.Abs(shadowOffsetY) + shadowBlurY + additonalPadding,
+                    ? initialPadding + shadowBlurY + offsetY
+                    : Math.Abs(shadowOffsetY) + shadowBlurY + additonalPadding + offsetY,
 
                 Bottom = shadowOffsetY <= 0
-                ? height - initialPadding - shadowBlurY
-                : height - shadowOffsetY - shadowBlurY - additonalPadding
+                    ? height - initialPadding - shadowBlurY + offsetY
+                    : height - shadowOffsetY - shadowBlurY - additonalPadding + offsetY
             };
 
-            var borderRect = new SKRect();
-            borderRect.Left = rect.Left + borderPadding - initialPadding;
-            borderRect.Right = rect.Right - borderPadding + initialPadding;
-            borderRect.Top = rect.Top + borderPadding - initialPadding;
-            borderRect.Bottom = rect.Bottom - borderPadding + initialPadding;
+            var borderRect = new SKRect
+            {
+                Left = rect.Left + borderPadding - initialPadding,
+                Right = rect.Right - borderPadding + initialPadding,
+                Top = rect.Top + borderPadding - initialPadding,
+                Bottom = rect.Bottom - borderPadding + initialPadding
+            };
+
+            var innerShadowRect = new SKRect
+            {
+                Left = innerBlurShadowOffsetX <= 0
+                    ? borderRect.Left + innerBlurShadowOffsetX + borderPadding
+                    : borderRect.Left + borderPadding - 0,
+
+                Right = innerBlurShadowOffsetX >= 0
+                    ? borderRect.Right + innerBlurShadowOffsetX - borderPadding
+                    : borderRect.Right - borderPadding,
+
+                Top = innerBlurShadowOffsetY <= 0
+                    ? borderRect.Top + innerBlurShadowOffsetY + borderPadding
+                    : borderRect.Top + borderPadding,
+
+                Bottom = innerBlurShadowOffsetY >= 0
+                    ? borderRect.Bottom + innerBlurShadowOffsetY - borderPadding
+                    : borderRect.Bottom - borderPadding
+            };
 
 
-
-
-            var backgroundBar = new SKRoundRect(
+            using (var backgroundBar = new SKRoundRect(
                 rect
                 , cornerRadius
-                , cornerRadius);
-
-            using (SKPaint paint = new SKPaint())
+                , cornerRadius))
             {
-                paint.IsAntialias = true;
-
-                paint.Shader = SKShader.CreateLinearGradient(
-                    new SKPoint(rect.Left, rect.Top),
-                    new SKPoint(rect.Right, rect.Bottom),
-                    backgroundColors,
-                    backgroundColorOffsets,
-                    SKShaderTileMode.Clamp);
-
-                // paint background
-                canvas.DrawRoundRect(backgroundBar, paint);
-
-
-                // shadow
-                if (shadowBlurX > 0 && shadowBlurY > 0)
+                using (SKPaint paint = new SKPaint())
                 {
-                    paint.ImageFilter = SKImageFilter.CreateDropShadow(
-                        shadowOffsetX,
-                        shadowOffsetY,
-                        shadowBlurX,
-                        shadowBlurY,
-                        shadowColor,
-                        SKDropShadowImageFilterShadowMode.DrawShadowAndForeground);
-                    canvas.DrawRoundRect(backgroundBar, paint);
-                }
-
-
-
-                // inner shadow
-                if (innerBlurShadowThickness > 0)
-                {
-                    canvas.ClipRoundRect(backgroundBar, SKClipOperation.Intersect, true);
-
-                    var innerShadowRect = new SKRect();
-
-                    innerShadowRect.Left = innerBlurShadowOffsetX <= 0
-                        ? borderRect.Left + innerBlurShadowOffsetX + borderPadding
-                        : borderRect.Left + borderPadding - 0;
-
-                    innerShadowRect.Right = innerBlurShadowOffsetX >= 0
-                        ? borderRect.Right + innerBlurShadowOffsetX - borderPadding
-                        : borderRect.Right - borderPadding;
-
-                    innerShadowRect.Top = innerBlurShadowOffsetY <= 0
-                        ? borderRect.Top + innerBlurShadowOffsetY + borderPadding
-                        : borderRect.Top + borderPadding;
-
-                    innerShadowRect.Bottom = innerBlurShadowOffsetY >= 0
-                        ? borderRect.Bottom + innerBlurShadowOffsetY - borderPadding
-                        : borderRect.Bottom - borderPadding;
-
-
-                    var innerShadowBorder = new SKRoundRect(
-                        innerShadowRect
-                        , cornerRadius - borderThickness
-                        , cornerRadius - borderThickness);
-
-                    SKPaint paint1 = new SKPaint();
-                    paint1.Color = innerBlurShadowColor;
-                    paint1.Style = SKPaintStyle.Stroke;
-                    paint1.StrokeWidth = innerBlurShadowThickness;
-
-                    paint1.ImageFilter = SKImageFilter.CreateBlur(innerBlurShadowBlurX, innerBlurShadowBlurY);
-                    canvas.DrawRoundRect(innerShadowBorder, paint1);
-                }
-
-                // border
-                if (borderThickness > 0)
-                {
-                    var border = new SKRoundRect(
-                        borderRect
-                        , cornerRadius - borderPadding
-                        , cornerRadius - borderPadding);
-
-                    paint.Style = SKPaintStyle.Stroke;
-                    paint.StrokeWidth = borderThickness;
-                    paint.ImageFilter = null;
-
-
+                    paint.IsAntialias = true;
                     paint.Shader = SKShader.CreateLinearGradient(
                         new SKPoint(rect.Left, rect.Top),
                         new SKPoint(rect.Right, rect.Bottom),
-                        borderColors,
-                        borderColorOffsets,
+                        backgroundColors,
+                        backgroundColorOffsets,
                         SKShaderTileMode.Clamp);
 
-                    canvas.DrawRoundRect(border, paint);
+                    // paint background
+                    canvas.DrawRoundRect(backgroundBar, paint);
+
+                    // shadow
+                    if (shadowBlurX > 0 && shadowBlurY > 0)
+                    {
+                        paint.ImageFilter = SKImageFilter.CreateDropShadow(
+                            shadowOffsetX,
+                            shadowOffsetY,
+                            shadowBlurX,
+                            shadowBlurY,
+                            shadowColor,
+                            SKDropShadowImageFilterShadowMode.DrawShadowAndForeground);
+                        canvas.DrawRoundRect(backgroundBar, paint);
+                    }
+
+                    // inner shadow
+                    if (innerBlurShadowThickness > 0)
+                    {
+                        canvas.ClipRoundRect(backgroundBar, SKClipOperation.Intersect, true);
+
+                        using (var innerShadowBorder = new SKRoundRect(
+                            innerShadowRect
+                            , cornerRadius - borderThickness
+                            , cornerRadius - borderThickness))
+                        {
+                            using (SKPaint paint1 = new SKPaint
+                            {
+                                Color = innerBlurShadowColor,
+                                Style = SKPaintStyle.Stroke,
+                                StrokeWidth = innerBlurShadowThickness,
+                                ImageFilter = SKImageFilter.CreateBlur(innerBlurShadowBlurX, innerBlurShadowBlurY)
+                            })
+                            {
+                                canvas.DrawRoundRect(innerShadowBorder, paint1);
+                            }
+                        }
+                    }
+
+                    // border
+                    if (borderThickness > 0)
+                    {
+                        using (var border = new SKRoundRect(
+                            borderRect
+                            , cornerRadius - borderPadding
+                            , cornerRadius - borderPadding))
+                        {
+
+                            paint.Style = SKPaintStyle.Stroke;
+                            paint.StrokeWidth = borderThickness;
+                            paint.ImageFilter = null;
+                            paint.Shader = SKShader.CreateLinearGradient(
+                                new SKPoint(rect.Left, rect.Top),
+                                new SKPoint(rect.Right, rect.Bottom),
+                                borderColors,
+                                borderColorOffsets,
+                                SKShaderTileMode.Clamp);
+
+                            canvas.DrawRoundRect(border, paint);
+                        }
+                    }
                 }
-
-
             }
+
+            return rect;
         }
+
+
+
 
         private void DrawProgressBar(SKCanvas canvas, float cornerRadius, float width)
         {

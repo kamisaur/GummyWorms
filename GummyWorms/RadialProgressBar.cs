@@ -103,7 +103,7 @@ namespace GummyWorms
                 Style = SKPaintStyle.Stroke,
                 IsAntialias = true,
                 StrokeWidth = strokeThickness,
-                StrokeCap = SKStrokeCap.Butt
+                StrokeCap = SKStrokeCap.Round
             };
 
 
