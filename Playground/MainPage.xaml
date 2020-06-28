@@ -1,13 +1,17 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms" xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:d="http://xamarin.com/schemas/2014/forms/design"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:gummy="clr-namespace:GummyWorms;assembly=GummyWorms"
-             mc:Ignorable="d" x:Class="Playground.MainPage">
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="Playground.MainPage"
+    xmlns="http://xamarin.com/schemas/2014/forms"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:d="http://xamarin.com/schemas/2014/forms/design"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:gummy="clr-namespace:GummyWorms;assembly=GummyWorms"
+    xmlns:ext="clr-namespace:GummyWorms.MarkupExtensions;assembly=GummyWorms"
+    mc:Ignorable="d">
 
     <StackLayout VerticalOptions="Center" Spacing="40">
 
-        
+
         <gummy:RadialProgressBar
             HorizontalOptions="Center"
             HeightRequest="200"
@@ -16,7 +20,7 @@
             ProgressColor="Tomato"
             TranslationY="200"
             ProgressThickness="30"
-            Progress="0.1"/>
+            Progress="0.1" />
 
         <gummy:ProgressBar
             Margin="30"
@@ -28,28 +32,20 @@
             HasText="True"
             TextColor="White"
             AlternativeTextColor="DarkSlateGray"
-            GradientEndColor="Violet">
+            GradientEndColor="Violet"
 
-            <gummy:ProgressBar.InnerShadow>
-                <gummy:Shadow Thickness="12"
-                              Color="Red"
-                              BlurX="9"
-                              BlurY="9"/>
-            </gummy:ProgressBar.InnerShadow>
-
-            <gummy:ProgressBar.ProgressInnerShadow>
-                <gummy:Shadow Thickness="2"
-                              Color="DarkRed"
-                              BlurX="2"
-                              BlurY="2"/>
-            </gummy:ProgressBar.ProgressInnerShadow>
-
-            <gummy:ProgressBar.Shadow>
-                <gummy:Shadow Thickness="12"
-                              Color="Black"
-                              BlurX="12"
-                              BlurY="12"/>
-            </gummy:ProgressBar.Shadow>
+            Shadow="{gummy:ShadowMarkup Thickness=12,
+                            BlurX=12,
+                            BlurY=12,
+                            Color=Black}"
+            InnerShadow="{gummy:ShadowMarkup Thickness=12,
+                                             Color=Green,
+                                             BlurX=9,
+                                             BlurY=9}"
+            ProgressInnerShadow="{gummy:ShadowMarkup Thickness=2,
+                                                     BlurX=2,
+                                                     BlurY=2,
+                                                     Color=DarkRed}">
 
         </gummy:ProgressBar>
 

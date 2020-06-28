@@ -22,4 +22,7 @@
     <PackageReference Include="Xamarin.Forms" Version="4.4.0.991265" />
   </ItemGroup>
     
+  <ItemGroup>
+    <Folder Include="MarkupExtensions\" />
+  </ItemGroup>
 </Project>
