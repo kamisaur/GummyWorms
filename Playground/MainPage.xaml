@@ -6,7 +6,6 @@
     xmlns:d="http://xamarin.com/schemas/2014/forms/design"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:gummy="clr-namespace:GummyWorms;assembly=GummyWorms"
-    xmlns:ext="clr-namespace:GummyWorms.MarkupExtensions;assembly=GummyWorms"
     mc:Ignorable="d">
 
     <StackLayout VerticalOptions="Center" Spacing="40">
@@ -24,7 +23,7 @@
 
         <gummy:ProgressBar
             Margin="30"
-            HeightRequest="80"
+            HeightRequest="100"
             Progress="0.4"
             CornerRadius="15"
             BackgroundBarColor="Green"
@@ -46,6 +45,18 @@
                                                      BlurX=2,
                                                      BlurY=2,
                                                      Color=DarkRed}">
+
+            <gummy:ProgressBar.Border>
+                <gummy:Border Color="Cyan"
+                              Thickness="6">
+
+                    <gummy:Border.GradientStops>
+                        <gummy:GradientStop Color="HotPink" Offset="0"/>
+                        <gummy:GradientStop Color="Black" Offset="1"/>
+                    </gummy:Border.GradientStops>
+
+                </gummy:Border>
+            </gummy:ProgressBar.Border>
 
         </gummy:ProgressBar>
 

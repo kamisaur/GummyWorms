@@ -24,5 +24,6 @@
     
   <ItemGroup>
     <Folder Include="MarkupExtensions\" />
+    <Folder Include="DataTypes\" />
   </ItemGroup>
 </Project>

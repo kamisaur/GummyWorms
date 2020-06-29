@@ -5,13 +5,6 @@ namespace GummyWorms
 {
     public class Shadow : BindableObject
     {
-
-        //, float innerBlurShadowBlurX
-        //, float innerBlurShadowBlurY
-        //, SKColor innerBlurShadowColor
-
-
-
         public static readonly BindableProperty ThicknessProperty = BindableProperty.Create(
             propertyName: nameof(Thickness)
             , returnType: typeof(float)

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using SkiaSharp;
 using SkiaSharp.Views.Forms;
 using Xamarin.Forms;
@@ -103,6 +104,23 @@ namespace GummyWorms
         }
 
 
+
+        public static BindableProperty BorderProperty = BindableProperty.Create(
+            propertyName: nameof(InnerShadow)
+            , returnType: typeof(Border)
+            , declaringType: typeof(ProgressBar)
+            , defaultValue: new Border()
+            , defaultBindingMode: BindingMode.OneWay
+            , validateValue: (_, value) => value != null
+            , propertyChanged: OnPropertyChangedInvalidate);
+
+        public Border Border
+        {
+            get { return (Border)GetValue(BorderProperty); }
+            set { SetValue(BorderProperty, value); }
+        }
+
+
         public static BindableProperty InnerShadowProperty = BindableProperty.Create(
             propertyName: nameof(InnerShadow)
             , returnType: typeof(Shadow)
@@ -152,7 +170,7 @@ namespace GummyWorms
 
 
 
-        private static void OnPropertyChangedInvalidate(BindableObject bindable, object oldvalue, object newvalue)
+        static void OnPropertyChangedInvalidate(BindableObject bindable, object oldvalue, object newvalue)
         {
             var control = (ProgressBar)bindable;
 
@@ -177,9 +195,32 @@ namespace GummyWorms
 
 
             // Border
-            float borderThickness = 0;
-            var borderColors = new SKColor[] { SKColors.Blue, SKColors.Blue, SKColors.Blue };
-            var borderColorOffsets = new float[] { 0, 0.5f, 1 };
+            float borderThickness = Border.Thickness * scale;
+
+            SKColor[] borderColors = null;
+            if (Border.GradientStops != null)
+            {
+                borderColors = Border.GradientStops.Select(x => x.Color.ToSKColor()).ToArray();
+            }
+            else
+            {
+                borderColors = new SKColor[] { Border.Color.ToSKColor(), Border.Color.ToSKColor() };
+            }
+
+
+            float[] borderColorOffsets = null;
+            if (Border.GradientStops != null)
+            {
+                borderColorOffsets = Border.GradientStops.Select(x => x.Offset).ToArray();
+            }
+            else
+            {
+                borderColorOffsets = new float[] { 0, 1f };
+            }
+
+
+            //var borderColors = new SKColor[] { SKColors.Blue, SKColors.Blue, SKColors.Blue };
+            //var borderColorOffsets = new float[] { 0, 0.5f, 1 };
 
 
             // Outter shadow
@@ -224,8 +265,6 @@ namespace GummyWorms
                 , innerBlurShadowColor);
 
 
-            //rect.Left
-            var pr = Progress;
             var percentageWidth = rect.Width * Progress;
 
             var cornerRadiusProgress = cornerRadius;
@@ -285,7 +324,7 @@ namespace GummyWorms
         /// <summary>
         /// Draw rectangle with shadows and border
         /// </summary>
-        private SKRect DrawRectangle(
+        SKRect DrawRectangle(
             SKCanvas canvas
             , float width
             , float height
@@ -347,10 +386,14 @@ namespace GummyWorms
 
             var borderRect = new SKRect
             {
-                Left = rect.Left + borderPadding - initialPadding,
-                Right = rect.Right - borderPadding + initialPadding,
-                Top = rect.Top + borderPadding - initialPadding,
-                Bottom = rect.Bottom - borderPadding + initialPadding
+                //Left = rect.Left + borderPadding - initialPadding,
+                //Right = rect.Right - borderPadding + initialPadding,
+                //Top = rect.Top + borderPadding - initialPadding,
+                //Bottom = rect.Bottom - borderPadding + initialPadding
+                Left = rect.Left + borderPadding,
+                Right = rect.Right - borderPadding,
+                Top = rect.Top + borderPadding,
+                Bottom = rect.Bottom - borderPadding
             };
 
             var innerShadowRect = new SKRect
@@ -458,7 +501,7 @@ namespace GummyWorms
 
 
 
-        private void DrawProgressBar(SKCanvas canvas, float cornerRadius, float width)
+        void DrawProgressBar(SKCanvas canvas, float cornerRadius, float width)
         {
             var progressBar = new SKRoundRect(
                 new SKRect(0, 0, width, CanvasSize.Height)
@@ -485,7 +528,7 @@ namespace GummyWorms
         }
 
 
-        private void DrawProgressText(SKCanvas canvas, float width, float fontSize)
+        void DrawProgressText(SKCanvas canvas, float width, float fontSize)
         {
             var str = Progress.ToString("0%");
 
