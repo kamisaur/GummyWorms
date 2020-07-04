@@ -1,5 +1,10 @@
 ﻿using System;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using SkiaSharp;
+using SkiaSharp.Views.Forms;
 using Xamarin.Forms;
 
 namespace GummyWorms
@@ -31,7 +36,7 @@ namespace GummyWorms
             propertyName: nameof(GradientStartPoint)
             , returnType: typeof(Point)
             , declaringType: typeof(Border)
-            , defaultValue: new Point(0,0));
+            , defaultValue: new Point(0, 0));
 
         public Point GradientStartPoint
         {
@@ -44,7 +49,7 @@ namespace GummyWorms
             propertyName: nameof(GradientEndPoint)
             , returnType: typeof(Point)
             , declaringType: typeof(Border)
-            , defaultValue: new Point(0, 0));
+            , defaultValue: new Point(1, 0));
 
         public Point GradientEndPoint
         {
@@ -65,18 +70,80 @@ namespace GummyWorms
             set { SetValue(ColorProperty, value); }
         }
 
-
         public static readonly BindableProperty GradientStopsProperty = BindableProperty.Create(
             propertyName: nameof(GradientStops)
-            , returnType: typeof(ObservableCollection<GradientStop>)
+            , returnType: typeof(GradientStopCollection)
             , declaringType: typeof(Border)
-            , defaultValue: default(ObservableCollection<GradientStop>));
+            , defaultValue: default(GradientStopCollection)
+            , defaultValueCreator: bindable =>
+                {
+                    return new GradientStopCollection();
+                }
+            , propertyChanging: (bindable, oldvalue, newvalue) =>
+                {
+                    if (oldvalue != null)
+                    {
+                        (bindable as Border).SetupInternalCollectionPropertyPropagation(true);
+                    }
+                }
+            , propertyChanged: (bindable, oldvalue, newvalue) =>
+                {
+                    if (newvalue != null)
+                    {
+                        (bindable as Border).SetupInternalCollectionPropertyPropagation();
+                    }
+                });
 
 
-        public ObservableCollection<GradientStop> GradientStops
+        public GradientStopCollection GradientStops
         {
-            get { return (ObservableCollection<GradientStop>)GetValue(GradientStopsProperty); }
+            get { return (GradientStopCollection)GetValue(GradientStopsProperty); }
             set { SetValue(GradientStopsProperty, value); }
+        }
+
+
+        void SetupInternalCollectionPropertyPropagation(bool teardown = false)
+        {
+            if (teardown && GradientStops != null)
+                GradientStops.CollectionChanged -= InternalCollectionChanged;
+            else if (GradientStops != null)
+                GradientStops.CollectionChanged += InternalCollectionChanged;
+        }
+
+        void InternalCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+            => OnPropertyChanged(ProgressBar.BorderProperty.PropertyName);
+
+        protected override void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            base.OnPropertyChanged(propertyName);
+
+            if (propertyName == ColorProperty.PropertyName ||
+                propertyName == GradientStartPointProperty.PropertyName ||
+                propertyName == GradientEndPointProperty.PropertyName ||
+                propertyName == ThicknessProperty.PropertyName ||
+                propertyName == nameof(GradientStops))
+            {
+                OnPropertyChanged(ProgressBar.BorderProperty.PropertyName);
+            }
+        }
+
+
+
+        public SKColor[] GetGradinetStops()
+        {
+            if (GradientStops != null)
+                return GradientStops.Select(x => x.Color.ToSKColor()).ToArray();
+            else
+                return new SKColor[] { Color.ToSKColor(), Color.ToSKColor() };
+        }
+
+
+        public float[] GetOffsets()
+        {
+            if (GradientStops != null)
+                return GradientStops.Select(x => x.Offset).ToArray();
+            else
+                return new float[] { 0, 1f };
         }
 
     }

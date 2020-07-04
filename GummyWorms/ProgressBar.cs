@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Specialized;
+using System.ComponentModel;
 using System.Linq;
+using GummyWorms.Base;
 using SkiaSharp;
 using SkiaSharp.Views.Forms;
 using Xamarin.Forms;
@@ -7,21 +10,10 @@ using Xamarin.Forms;
 
 namespace GummyWorms
 {
-    public class ProgressBar : SKCanvasView
+    public class ProgressBar : BaseProgressBar
     {
-        public static BindableProperty ProgressProperty = BindableProperty.Create(nameof(Progress), typeof(float),
-            typeof(ProgressBar), 0f, BindingMode.OneWay,
-            validateValue: (_, value) => value != null,
-            propertyChanged: OnPropertyChangedInvalidate);
-
-        public float Progress
-        {
-            get => (float)GetValue(ProgressProperty);
-            set => SetValue(ProgressProperty, value);
-        }
-
-
-        public static BindableProperty CornerRadiusProperty = BindableProperty.Create(nameof(CornerRadius), typeof(float),
+        public static BindableProperty CornerRadiusProperty = BindableProperty.Create(
+            nameof(CornerRadius), typeof(float),
             typeof(ProgressBar), 0f, BindingMode.OneWay,
             validateValue: (_, value) => value != null && (float)value >= 0,
             propertyChanged: OnPropertyChangedInvalidate);
@@ -32,15 +24,204 @@ namespace GummyWorms
             set => SetValue(CornerRadiusProperty, value);
         }
 
-        public static BindableProperty BarBackgroundColorProperty = BindableProperty.Create(nameof(BackgroundBarColor), typeof(Color),
-            typeof(ProgressBar), Color.White, BindingMode.OneWay,
-            validateValue: (_, value) => value != null, propertyChanged: OnPropertyChangedInvalidate);
+
+
+        #region Background Colors
+
+        public static BindableProperty BackgroundBarColorProperty = BindableProperty.Create(
+            propertyName: nameof(BackgroundBarColor)
+            , returnType: typeof(Color)
+            , declaringType: typeof(ProgressBar)
+            , defaultValue: Color.White
+            , defaultBindingMode: BindingMode.OneWay
+            , validateValue: (_, value) => value != null
+            , propertyChanged: OnPropertyChangedInvalidate);
+
+        public static BindableProperty ProgressColorProperty = BindableProperty.Create(
+            propertyName: nameof(ProgressColor)
+            , returnType: typeof(Color)
+            , declaringType: typeof(ProgressBar)
+            , defaultValue: Color.White
+            , defaultBindingMode: BindingMode.OneWay
+            , validateValue: (_, value) => value != null
+            , propertyChanged: OnPropertyChangedInvalidate);
+
+        public static readonly BindableProperty BackgroundBarGradientStopsProperty = BindableProperty.Create(
+            propertyName: nameof(BackgroundBarGradientStops)
+            , returnType: typeof(GradientStopCollection)
+            , declaringType: typeof(ProgressBar)
+            , defaultValue: default(GradientStopCollection)
+            , defaultValueCreator: bindable =>
+            {
+                return new GradientStopCollection();
+            }
+            , propertyChanging: (bindable, oldvalue, newvalue) =>
+            {
+                if (oldvalue != null)
+                {
+                    (bindable as ProgressBar).SetupInternalCollectionPropertyPropagation(true);
+                }
+            }
+            , propertyChanged: (bindable, oldvalue, newvalue) =>
+            {
+                if (newvalue != null)
+                {
+                    (bindable as ProgressBar).SetupInternalCollectionPropertyPropagation();
+                }
+            });
+
 
         public Color BackgroundBarColor
         {
-            get => (Color)GetValue(BarBackgroundColorProperty);
-            set => SetValue(BarBackgroundColorProperty, value);
+            get => (Color)GetValue(BackgroundBarColorProperty);
+            set => SetValue(BackgroundBarColorProperty, value);
         }
+
+        public Color ProgressColor
+        {
+            get => (Color)GetValue(ProgressColorProperty);
+            set => SetValue(ProgressColorProperty, value);
+        }
+
+        public GradientStopCollection BackgroundBarGradientStops
+        {
+            get { return (GradientStopCollection)GetValue(BackgroundBarGradientStopsProperty); }
+            set { SetValue(BackgroundBarGradientStopsProperty, value); }
+        }
+
+
+
+        //public static readonly BindableProperty ProgressBackgroundGradientStopsProperty = BindableProperty.Create(
+        //    propertyName: nameof(ProgressBackgroundGradientStops)
+        //    , returnType: typeof(GradientStopCollection)
+        //    , declaringType: typeof(ProgressBar)
+        //    , defaultValue: default(GradientStopCollection)
+        //    , defaultValueCreator: bindable =>
+        //    {
+        //        return new GradientStopCollection();
+        //    }
+        //    , propertyChanging: (bindable, oldvalue, newvalue) =>
+        //    {
+        //        if (oldvalue != null)
+        //        {
+        //            (bindable as ProgressBar).SetupInternalCollectionPropertyPropagation(true);
+        //        }
+        //    }
+        //    , propertyChanged: (bindable, oldvalue, newvalue) =>
+        //    {
+        //        if (newvalue != null)
+        //        {
+        //            (bindable as ProgressBar).SetupInternalCollectionPropertyPropagation();
+        //        }
+        //    });
+
+
+        //public GradientStopCollection ProgressBackgroundGradientStops
+        //{
+        //    get { return (GradientStopCollection)GetValue(ProgressBackgroundGradientStopsProperty); }
+        //    set { SetValue(ProgressBackgroundGradientStopsProperty, value); }
+        //}
+
+        void SetupInternalCollectionPropertyPropagation(bool teardown = false)
+        {
+            if (teardown && BackgroundBarGradientStops != null)
+            {
+                BackgroundBarGradientStops.CollectionChanged -= InternalCollectionChanged;
+            }
+            else if (BackgroundBarGradientStops != null)
+            {
+                BackgroundBarGradientStops.CollectionChanged += InternalCollectionChanged;
+            }
+        }
+
+        void InternalCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+            => OnPropertyChanged(BackgroundBarGradientStopsProperty.PropertyName);
+
+        #endregion
+
+
+        #region Borders
+
+        public static BindableProperty BorderProperty = BindableProperty.Create(
+            propertyName: nameof(Border)
+            , returnType: typeof(Border)
+            , declaringType: typeof(ProgressBar)
+            , defaultValue: new Border()
+            , defaultBindingMode: BindingMode.OneWay
+            , validateValue: (_, value) => value != null
+            , propertyChanging: (bindable, oldvalue, newvalue) =>
+                {
+                    if (bindable != null && oldvalue != null)
+                    {
+                        (bindable as ProgressBar).SetupInternalPropertyPropagation(oldvalue as Border, true);
+                    }
+                },
+            propertyChanged: (bindable, oldvalue, newvalue) =>
+                {
+                    if (bindable != null && newvalue != null)
+                    {
+                        (bindable as ProgressBar).SetupInternalPropertyPropagation(newvalue as Border);
+                    }
+                });
+
+
+        public static BindableProperty ProgressBorderProperty = BindableProperty.Create(
+            propertyName: nameof(ProgressBorder)
+            , returnType: typeof(Border)
+            , declaringType: typeof(ProgressBar)
+            , defaultValue: new Border()
+            , defaultBindingMode: BindingMode.OneWay
+            , validateValue: (_, value) => value != null
+            , propertyChanging: (bindable, oldvalue, newvalue) =>
+            {
+                if (bindable != null && oldvalue != null)
+                {
+                    (bindable as ProgressBar).SetupInternalPropertyPropagation(oldvalue as Border, true);
+                }
+            },
+            propertyChanged: (bindable, oldvalue, newvalue) =>
+            {
+                if (bindable != null && newvalue != null)
+                {
+                    (bindable as ProgressBar).SetupInternalPropertyPropagation(newvalue as Border);
+                }
+            });
+
+
+        public Border Border
+        {
+            get { return (Border)GetValue(BorderProperty); }
+            set { SetValue(BorderProperty, value); }
+        }
+
+        public Border ProgressBorder
+        {
+            get { return (Border)GetValue(ProgressBorderProperty); }
+            set { SetValue(ProgressBorderProperty, value); }
+        }
+
+
+        void SetupInternalPropertyPropagation(BindableObject bindableObject, bool teardown = false)
+        {
+            if (teardown)
+            {
+                bindableObject.PropertyChanged -= InternalPropertyChanged;
+            }
+            else
+            {
+                bindableObject.PropertyChanged += InternalPropertyChanged;
+            }
+        }
+
+        void InternalPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            OnPropertyChanged(e.PropertyName);
+        }
+
+        #endregion
+
+
+        #region Text
 
         public static BindableProperty FontSizeProperty = BindableProperty.Create(nameof(FontSize), typeof(float),
             typeof(ProgressBar), 12f, BindingMode.OneWay,
@@ -51,26 +232,6 @@ namespace GummyWorms
         {
             get => (float)GetValue(FontSizeProperty);
             set => SetValue(FontSizeProperty, value);
-        }
-
-        public static BindableProperty GradientStartColorProperty = BindableProperty.Create(nameof(GradientStartColor), typeof(Color),
-            typeof(ProgressBar), Color.Purple, BindingMode.OneWay,
-            validateValue: (_, value) => value != null, propertyChanged: OnPropertyChangedInvalidate);
-
-        public Color GradientStartColor
-        {
-            get => (Color)GetValue(GradientStartColorProperty);
-            set => SetValue(GradientStartColorProperty, value);
-        }
-
-        public static BindableProperty GradientEndColorProperty = BindableProperty.Create(nameof(GradientEndColor), typeof(Color),
-            typeof(ProgressBar), Color.Blue, BindingMode.OneWay,
-            validateValue: (_, value) => value != null, propertyChanged: OnPropertyChangedInvalidate);
-
-        public Color GradientEndColor
-        {
-            get => (Color)GetValue(GradientEndColorProperty);
-            set => SetValue(GradientEndColorProperty, value);
         }
 
         public static BindableProperty TextColorProperty = BindableProperty.Create(nameof(TextColor), typeof(Color),
@@ -103,80 +264,8 @@ namespace GummyWorms
             set => SetValue(HasTextProperty, value);
         }
 
+        #endregion
 
-
-        public static BindableProperty BorderProperty = BindableProperty.Create(
-            propertyName: nameof(InnerShadow)
-            , returnType: typeof(Border)
-            , declaringType: typeof(ProgressBar)
-            , defaultValue: new Border()
-            , defaultBindingMode: BindingMode.OneWay
-            , validateValue: (_, value) => value != null
-            , propertyChanged: OnPropertyChangedInvalidate);
-
-        public Border Border
-        {
-            get { return (Border)GetValue(BorderProperty); }
-            set { SetValue(BorderProperty, value); }
-        }
-
-
-        public static BindableProperty InnerShadowProperty = BindableProperty.Create(
-            propertyName: nameof(InnerShadow)
-            , returnType: typeof(Shadow)
-            , declaringType: typeof(ProgressBar)
-            , defaultValue: new Shadow()
-            , defaultBindingMode: BindingMode.OneWay
-            , validateValue: (_, value) => value != null
-            , propertyChanged: OnPropertyChangedInvalidate);
-
-        public Shadow InnerShadow
-        {
-            get => (Shadow)GetValue(InnerShadowProperty);
-            set => SetValue(InnerShadowProperty, value);
-        }
-
-
-        public static BindableProperty ProgressInnerShadowProperty = BindableProperty.Create(
-            propertyName: nameof(ProgressInnerShadow)
-            , returnType: typeof(Shadow)
-            , declaringType: typeof(ProgressBar)
-            , defaultValue: new Shadow()
-            , defaultBindingMode: BindingMode.OneWay
-            , validateValue: (_, value) => value != null
-            , propertyChanged: OnPropertyChangedInvalidate);
-
-        public Shadow ProgressInnerShadow
-        {
-            get => (Shadow)GetValue(ProgressInnerShadowProperty);
-            set => SetValue(ProgressInnerShadowProperty, value);
-        }
-
-
-        public static BindableProperty ShadowProperty = BindableProperty.Create(
-            propertyName: nameof(Shadow)
-            , returnType: typeof(Shadow)
-            , declaringType: typeof(ProgressBar)
-            , defaultValue: new Shadow()
-            , defaultBindingMode: BindingMode.OneWay
-            , validateValue: (_, value) => value != null
-            , propertyChanged: OnPropertyChangedInvalidate);
-
-        public Shadow Shadow
-        {
-            get => (Shadow)GetValue(ShadowProperty);
-            set => SetValue(ShadowProperty, value);
-        }
-
-
-
-        static void OnPropertyChangedInvalidate(BindableObject bindable, object oldvalue, object newvalue)
-        {
-            var control = (ProgressBar)bindable;
-
-            if (oldvalue != newvalue)
-                control.InvalidateSurface();
-        }
 
 
         protected override void OnPaintSurface(SKPaintSurfaceEventArgs e)
@@ -189,55 +278,35 @@ namespace GummyWorms
 
             canvas.Clear();
 
+
+            #region Background Bar
+
             var cornerRadius = CornerRadius * scale;
+
             var backgroundColors = new SKColor[] { SKColors.LightGray, SKColors.LightGray, SKColors.LightGray };
             var backgroundColorOffsets = new float[] { 0, 0.5f, 1 };
 
 
             // Border
             float borderThickness = Border.Thickness * scale;
-
-            SKColor[] borderColors = null;
-            if (Border.GradientStops != null)
-            {
-                borderColors = Border.GradientStops.Select(x => x.Color.ToSKColor()).ToArray();
-            }
-            else
-            {
-                borderColors = new SKColor[] { Border.Color.ToSKColor(), Border.Color.ToSKColor() };
-            }
-
-
-            float[] borderColorOffsets = null;
-            if (Border.GradientStops != null)
-            {
-                borderColorOffsets = Border.GradientStops.Select(x => x.Offset).ToArray();
-            }
-            else
-            {
-                borderColorOffsets = new float[] { 0, 1f };
-            }
-
-
-            //var borderColors = new SKColor[] { SKColors.Blue, SKColors.Blue, SKColors.Blue };
-            //var borderColorOffsets = new float[] { 0, 0.5f, 1 };
-
+            var borderColors = Border.GetGradinetStops();
+            var borderColorOffsets = Border.GetOffsets();
 
             // Outter shadow
             float shadowThickness = Shadow.Thickness * scale;
             float shadowOffsetX = Shadow.OffsetX * scale;
             float shadowOffsetY = Shadow.OffsetY * scale;
-            float shadowBlurX   = Shadow.BlurX * scale;
-            float shadowBlurY   = Shadow.BlurY * scale;
+            float shadowBlurX = Shadow.BlurX * scale;
+            float shadowBlurY = Shadow.BlurY * scale;
             var shadowColor = Shadow.Color.ToSKColor();
 
             // Inner Shadow
-            float innerBlurShadowThickness  = InnerShadow.Thickness * scale;
-            float innerBlurShadowOffsetX    = InnerShadow.OffsetX * scale;
-            float innerBlurShadowOffsetY    = InnerShadow.OffsetY * scale;
-            float innerBlurShadowBlurX      = InnerShadow.BlurX * scale;
-            float innerBlurShadowBlurY      = InnerShadow.BlurY * scale;
-            SKColor innerBlurShadowColor    = InnerShadow.Color.ToSKColor();
+            float innerBlurShadowThickness = InnerShadow.Thickness * scale;
+            float innerBlurShadowOffsetX = InnerShadow.OffsetX * scale;
+            float innerBlurShadowOffsetY = InnerShadow.OffsetY * scale;
+            float innerBlurShadowBlurX = InnerShadow.BlurX * scale;
+            float innerBlurShadowBlurY = InnerShadow.BlurY * scale;
+            SKColor innerBlurShadowColor = InnerShadow.Color.ToSKColor();
 
 
             var rect = DrawRectangle(
@@ -264,6 +333,12 @@ namespace GummyWorms
                 , innerBlurShadowBlurY
                 , innerBlurShadowColor);
 
+            #endregion
+
+
+
+            #region Progress Bar
+
 
             var percentageWidth = rect.Width * Progress;
 
@@ -272,10 +347,13 @@ namespace GummyWorms
             var backgroundColorOffsetsProgress = new float[] { 0, 1f };
 
 
-            // Border
-            float borderThicknessProgress = 0;
-            var borderColorsProgress = new SKColor[] { SKColors.Blue, SKColors.Blue, SKColors.Blue };
-            var borderColorOffsetsProgress = new float[] { 0, 0.5f, 1 };
+
+            //ProgressBorder
+            float borderThicknessProgress = ProgressBorder.Thickness * scale;
+            var borderColorsProgress = ProgressBorder.GetGradinetStops();
+            var borderColorOffsetsProgress = ProgressBorder.GetOffsets();
+
+
 
             // Inner Shadow
             float innerBlurShadowThicknessProgress = ProgressInnerShadow.Thickness * scale;
@@ -311,6 +389,10 @@ namespace GummyWorms
                 , innerBlurShadowColorProgress);
 
 
+            #endregion
+
+
+
             //DrawProgressBar(canvas, cornerRadius, percentageWidth);
 
 
@@ -320,6 +402,9 @@ namespace GummyWorms
             //    DrawProgressText(canvas, percentageWidth, fontSize);
             //}
         }
+
+
+
 
         /// <summary>
         /// Draw rectangle with shadows and border
@@ -386,10 +471,6 @@ namespace GummyWorms
 
             var borderRect = new SKRect
             {
-                //Left = rect.Left + borderPadding - initialPadding,
-                //Right = rect.Right - borderPadding + initialPadding,
-                //Top = rect.Top + borderPadding - initialPadding,
-                //Bottom = rect.Bottom - borderPadding + initialPadding
                 Left = rect.Left + borderPadding,
                 Right = rect.Right - borderPadding,
                 Top = rect.Top + borderPadding,
@@ -494,37 +575,7 @@ namespace GummyWorms
                     }
                 }
             }
-
             return rect;
-        }
-
-
-
-
-        void DrawProgressBar(SKCanvas canvas, float cornerRadius, float width)
-        {
-            var progressBar = new SKRoundRect(
-                new SKRect(0, 0, width, CanvasSize.Height)
-                , cornerRadius
-                , cornerRadius);
-
-            using (var paint = new SKPaint() { IsAntialias = true })
-            {
-                var rect = new SKRect(0, 0, width, CanvasSize.Height);
-
-                paint.Shader = SKShader.CreateLinearGradient(
-                    start: new SKPoint(rect.Left, rect.Top),
-                    end: new SKPoint(rect.Right, rect.Top),
-                    colors: new[]
-                        {
-                            GradientStartColor.ToSKColor(),
-                            GradientEndColor.ToSKColor()
-                        },
-                    colorPos: new float[] { 0, 1 },
-                    mode: SKShaderTileMode.Clamp);
-
-                canvas.DrawRoundRect(progressBar, paint);
-            }
         }
 
 
@@ -552,5 +603,6 @@ namespace GummyWorms
 
             canvas.DrawText(str, xText, yText, textPaint);
         }
+
     }
 }
